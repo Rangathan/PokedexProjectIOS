@@ -7,9 +7,10 @@
 
 import Foundation
 
+
 struct PokemonPage: Codable {
     let count: Int
-    let next: String
+    let next: String?
     let results: [Pokemon]
 
     // Implement encode(to:) method
@@ -42,6 +43,7 @@ struct Pokemon: Identifiable, Decodable, Hashable, Encodable {
         case id, name, url
     }
 }
+
 
 
 

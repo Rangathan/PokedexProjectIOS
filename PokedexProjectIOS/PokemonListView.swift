@@ -10,27 +10,19 @@ import Combine
 
 
 
-import SwiftUI
-import Combine
-
-
 
 
 struct PokemonListView: View {
     @State private var pokemonPage: PokemonPage?
     @State private var isLoading = false
+    @StateObject private var viewModel = ViewModel()
     
     var body: some View {
         Group {
             if isLoading {
-                ProgressView()
+               ProgressView()
             } else if let pokemonPage = pokemonPage {
-                let columns = [GridItem(), GridItem()]
-                LazyVGrid(columns: columns) {
-                    ForEach(pokemonPage.results) { pokemon in
-                        PokemonItemView(pokemon: pokemon)
-                    }
-                }
+                PokemonGridView(pokemonPage: pokemonPage, selectedPokemon: $viewModel.selectedPokemon, viewModel: viewModel)
             } else {
                 Text("No data available")
             }
@@ -43,22 +35,48 @@ struct PokemonListView: View {
     private func fetchData() {
         isLoading = true
         
-        // Assuming you have some method to fetch the Pokemon data
-        // Here's a placeholder for demonstration purposes
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            let samplePokemon = Pokemon(id: UUID(), name: "Pikachu", url: "https://pokeapi.co/api/v2/pokemon/25")
-            let samplePokemonPage = PokemonPage(count: 1, next: "", results: [samplePokemon])
-            pokemonPage = samplePokemonPage
+        NetworkManager.shared.fetchPokemonPage { result in
             isLoading = false
+            switch result {
+            case .success(let pokemonPage):
+                self.pokemonPage = pokemonPage
+            case .failure(let error):
+                print("Error fetching Pokemon: \(error)")
+                // Handle error, e.g., show an alert
+            }
         }
     }
 }
 
-struct PokemonListView_Previews: PreviewProvider {
-    static var previews: some View {
-        PokemonListView()
+
+    // Define a separate view for the grid
+struct PokemonGridView: View {
+    let pokemonPage: PokemonPage
+    @Binding var selectedPokemon: Pokemon? // Update the type to PokemonDetails?
+    @ObservedObject var viewModel: ViewModel
+    
+    var body: some View {
+        let columns = [GridItem(), GridItem()]
+        return LazyVGrid(columns: columns) {
+            ForEach(pokemonPage.results, id: \.id) { pokemon in
+                PokemonItemView(pokemon: pokemon, viewModel: viewModel)
+
+            }
+        }
     }
 }
+
+
+
+
+
+
+    
+    
+    
+    
+
+
 
 
 
