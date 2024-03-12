@@ -9,20 +9,17 @@ import SwiftUI
 import Combine
 
 
-
-
-
 struct PokemonListView: View {
     @State private var pokemonPage: PokemonPage?
     @State private var isLoading = false
-    @StateObject private var viewModel = ViewModel()
+    @StateObject private var viewModel = PokemonListViewModel()
     
     var body: some View {
         Group {
             if isLoading {
-               ProgressView()
+                ProgressView()
             } else if let pokemonPage = pokemonPage {
-                PokemonGridView(pokemonPage: pokemonPage, selectedPokemon: $viewModel.selectedPokemon, viewModel: viewModel)
+                PokemonGridView(pokemonPage: pokemonPage, viewModel: viewModel)
             } else {
                 Text("No data available")
             }
@@ -48,23 +45,57 @@ struct PokemonListView: View {
     }
 }
 
-
-    // Define a separate view for the grid
+// Define a separate view for the grid
 struct PokemonGridView: View {
     let pokemonPage: PokemonPage
-    @Binding var selectedPokemon: Pokemon? // Update the type to PokemonDetails?
-    @ObservedObject var viewModel: ViewModel
+    @ObservedObject var viewModel: PokemonListViewModel
     
     var body: some View {
         let columns = [GridItem(), GridItem()]
         return LazyVGrid(columns: columns) {
             ForEach(pokemonPage.results, id: \.id) { pokemon in
-                PokemonItemView(pokemon: pokemon, viewModel: viewModel)
-
+                PokemonItemViewContainer(pokemon: pokemon, viewModel: viewModel)
             }
         }
     }
 }
+
+struct PokemonItemViewContainer: View {
+    let pokemon: Pokemon
+    @ObservedObject var viewModel: PokemonListViewModel
+    
+    var body: some View {
+        if let details = viewModel.pokemonDetails[pokemon.name] {
+            return PokemonItemView(pokemonDetails: details)
+                .onAppear {
+                    viewModel.fetchPokemonDetails(for: pokemon)
+                }
+                .eraseToAnyView()
+        } else {
+            return PokemonItemViewPlaceholder()
+                .onAppear {
+                    viewModel.fetchPokemonDetails(for: pokemon)
+                }
+                .eraseToAnyView()
+        }
+    }
+}
+
+
+extension View {
+    func eraseToAnyView() -> AnyView {
+        return AnyView(self)
+    }
+}
+
+struct PokemonItemViewPlaceholder: View {
+    var body: some View {
+        Rectangle()
+            .foregroundColor(.gray)
+            .aspectRatio(1, contentMode: .fit)
+    }
+}
+
 
 
 

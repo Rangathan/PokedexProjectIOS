@@ -9,28 +9,24 @@ import SwiftUI
 import Combine
 
 struct PokemonItemView: View {
-    let pokemon: Pokemon
-    @ObservedObject var viewModel: ViewModel
+    let pokemonDetails: PokemonDetails?
     
     var body: some View {
         HStack {
-            if let spriteURL = URL(string: viewModel.pokemonDetails?.sprites.frontDefault ?? "") {
-                // Load the sprite from the URL
+            if let spriteURL = URL(string: pokemonDetails?.sprites.frontDefault ?? "") {
                 AsyncImage(url: spriteURL) { image in
                     image.resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 50, height: 50) // Adjust size as needed
-
+                        .frame(width: 50, height: 50)
                 } placeholder: {
                     ProgressView()
                 }
             }
-            Text(pokemon.name)
+            Text(pokemonDetails?.name ?? "Unknown")
         }
         .padding(.vertical, 8)
     }
 }
-
 
 struct PokemonDetailView: View {
     let pokemonDetails: PokemonDetails
@@ -39,14 +35,13 @@ struct PokemonDetailView: View {
         VStack {
             Text("Name: \(pokemonDetails.name)")
             if let spriteURL = URL(string: pokemonDetails.sprites.frontDefault) {
-                // Load the sprite from the URL
                 AsyncImage(url: spriteURL) { image in
                     image.resizable()
                         .aspectRatio(contentMode: .fit)
                 } placeholder: {
                     ProgressView()
                 }
-                .frame(width: 100, height: 100) // Adjust size as needed
+                .frame(width: 100, height: 100)
             }
             // Display other details as needed
         }

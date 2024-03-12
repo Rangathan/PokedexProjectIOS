@@ -8,17 +8,16 @@
 import Foundation
 import Combine
 
-
-class ViewModel: ObservableObject {
+class PokemonListViewModel: ObservableObject {
     @Published var pokemonList: [Pokemon] = []
-       @Published var isLoading = false
-       @Published var selectedPokemon: Pokemon? // Change type to Pokemon
+    @Published var isLoading = false
+    @Published var selectedPokemon: Pokemon?
 
-       @Published var pokemonDetails: PokemonDetails? // Store PokemonDetails separately for the selected Pokemon
+    // Dictionary to store PokemonDetails with Pokemon name as key
+    @Published var pokemonDetails: [String: PokemonDetails] = [:]
 
-       private var cancellables = Set<AnyCancellable>()
+    private var cancellables = Set<AnyCancellable>()
 
-    
     func fetchData() {
         isLoading = true
         
@@ -41,23 +40,21 @@ class ViewModel: ObservableObject {
                     print("Error: \(error)")
                     self.isLoading = false
                 }
-            }, receiveValue: { [weak self] (pokemonListResponse: PokemonPage) in
+            }, receiveValue: { [weak self] (pokemonPage: PokemonPage) in
                 // Handle the received PokemonListResponse
                 guard let self = self else { return }
-                self.pokemonList = pokemonListResponse.results
+                self.pokemonList = pokemonPage.results
             })
             .store(in: &cancellables)
     }
-    
-    func pokemonDetails(for pokemon: Pokemon) -> PokemonDetails? {
-        // Check if the URL of the Pokemon is valid
-        guard let pokemonURL = URL(string: pokemon.url) else {
+
+    func fetchPokemonDetails(for pokemon: Pokemon) {
+        guard let url = URL(string: pokemon.url) else {
             print("Invalid Pokemon URL")
-            return nil
+            return
         }
-        
-        // Fetch the details for the given Pokemon
-        URLSession.shared.dataTask(with: pokemonURL) { [weak self] data, response, error in
+
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
             guard let self = self else { return }
             
             if let error = error {
@@ -73,17 +70,13 @@ class ViewModel: ObservableObject {
             do {
                 let pokemonDetails = try JSONDecoder().decode(PokemonDetails.self, from: data)
                 DispatchQueue.main.async {
-                    self.pokemonDetails = pokemonDetails
+                    // Update pokemonDetails dictionary with fetched details
+                    self.pokemonDetails[pokemon.name] = pokemonDetails
                 }
             } catch {
                 print("Error decoding Pokemon details: \(error)")
             }
         }.resume()
-        
-        // Return nil temporarily as the details are being fetched asynchronously
-        return nil
     }
 }
-
-
 

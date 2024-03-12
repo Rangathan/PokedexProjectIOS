@@ -7,11 +7,9 @@
 
 import SwiftUI
 import Combine
-
 struct ContentView: View {
-    @StateObject private var viewModel = ViewModel()
-    @State private var selectedPokemon: Pokemon? = nil
-    @State private var selectedPokemonDetails: PokemonDetails? = nil
+    @StateObject private var viewModel = PokemonListViewModel()
+    @State private var isShowingPokemonDetails = false
     
     var body: some View {
         NavigationView {
@@ -20,37 +18,30 @@ struct ContentView: View {
                     ProgressView()
                 } else {
                     List(viewModel.pokemonList, id: \.id) { pokemon in
-                        PokemonItemView(pokemon: pokemon, viewModel: viewModel)
+                        PokemonItemViewContainer(pokemon: pokemon, viewModel: viewModel)
                             .onTapGesture {
-                                selectedPokemon = pokemon
-                                selectedPokemonDetails = viewModel.pokemonDetails(for: pokemon)
+                                viewModel.selectedPokemon = pokemon
+                                viewModel.fetchPokemonDetails(for: pokemon)
+                                isShowingPokemonDetails = true
                             }
                     }
                 }
             }
-            .onAppear {
-                viewModel.fetchData()
-            }
             .navigationTitle("PokeDex")
-            .sheet(item: $selectedPokemonDetails) { details in
-                PokemonDetailView(pokemonDetails: details)
+        }
+        .sheet(isPresented: $isShowingPokemonDetails) {
+            if let selectedPokemon = viewModel.selectedPokemon,
+               let pokemonDetails = viewModel.pokemonDetails[selectedPokemon.name] {
+                PokemonDetailView(pokemonDetails: pokemonDetails)
+            } else {
+                Text("Loading...")
             }
-
-            
+        }
+        .onAppear {
+            viewModel.fetchData()
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
