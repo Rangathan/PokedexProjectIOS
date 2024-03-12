@@ -28,7 +28,7 @@ struct PokemonPage: Codable {
 }
 
 struct Pokemon: Identifiable, Decodable, Hashable, Encodable {
-    let id: UUID?
+    let id: UUID = UUID()
     let name: String
     let url: String
     
