@@ -29,25 +29,30 @@ struct PokemonItemView: View {
 }
 
 struct PokemonDetailView: View {
-    let pokemonDetails: PokemonDetails
+    let pokemonDetails: PokemonDetails?
     
     var body: some View {
         VStack {
-            Text("Name: \(pokemonDetails.name)")
-            if let spriteURL = URL(string: pokemonDetails.sprites.frontDefault) {
-                AsyncImage(url: spriteURL) { image in
-                    image.resizable()
-                        .aspectRatio(contentMode: .fit)
-                } placeholder: {
-                    ProgressView()
+            if let pokemonDetails = pokemonDetails {
+                Text("Name: \(pokemonDetails.name)")
+                if let spriteURL = URL(string: pokemonDetails.sprites.frontDefault) {
+                    AsyncImage(url: spriteURL) { image in
+                        image.resizable()
+                            .aspectRatio(contentMode: .fit)
+                    } placeholder: {
+                        ProgressView()
+                    }
+                    .frame(width: 100, height: 100)
                 }
-                .frame(width: 100, height: 100)
+                // Display other details as needed
+            } else {
+                Text("Pokemon details not available")
             }
-            // Display other details as needed
         }
         .padding()
     }
 }
+
 
 
 class PokemonDetailsViewModel: ObservableObject {

@@ -11,13 +11,16 @@ struct ContentView: View {
     @StateObject private var viewModel = PokemonListViewModel()
     @State private var isShowingPokemonDetails = false
     
+    // Define the adaptive columns for the LazyVGrid
+    let adaptiveColumns = [
+        GridItem(.adaptive(minimum: 150), spacing: 10)
+    ]
+    
     var body: some View {
         NavigationView {
-            VStack {
-                if viewModel.isLoading {
-                    ProgressView()
-                } else {
-                    List(viewModel.pokemonList, id: \.id) { pokemon in
+            ScrollView {
+                LazyVGrid(columns: adaptiveColumns, spacing: 10) {
+                    ForEach(viewModel.pokemonList, id: \.id) { pokemon in
                         PokemonItemViewContainer(pokemon: pokemon, viewModel: viewModel)
                             .onTapGesture {
                                 viewModel.selectedPokemon = pokemon
@@ -26,6 +29,7 @@ struct ContentView: View {
                             }
                     }
                 }
+                .padding()
             }
             .navigationTitle("PokeDex")
         }
@@ -42,6 +46,8 @@ struct ContentView: View {
         }
     }
 }
+
+
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
