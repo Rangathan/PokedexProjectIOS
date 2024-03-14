@@ -32,6 +32,8 @@ struct PokemonItemView: View {
     }
 }
 
+import OggDecoder
+
 struct PokemonDetailView: View {
     let pokemonDetails: PokemonDetails?
     @State private var player: AVPlayer?
@@ -56,12 +58,13 @@ struct PokemonDetailView: View {
                 .onAppear {
                     if let soundURL = URL(string: pokemonDetails.cries.legacy) {
                         let decoder = OGGDecoder()
-                        decoder.decode(soundURL) { savedWavUrl in
+                        decoder.decode(soundURL) { (savedWavUrl: URL?) in
                             if let savedWavUrl = savedWavUrl {
-                                self.player = AVPlayer(url: savedWavUrl)
-                                self.player?.play()
+                                let playerItem = AVPlayerItem(url: savedWavUrl)
+                                player = AVPlayer(playerItem: playerItem)
+                                player?.play()
                             } else {
-                                print("Failed to decode .ogg file.")
+                                print(soundURL)
                             }
                         }
                     }
@@ -72,7 +75,8 @@ struct PokemonDetailView: View {
         }
         .padding()
     }
-    
+
+
     private func determineBackgroundColor(for pokemonDetails: PokemonDetails) -> Color {
         guard let type = pokemonDetails.types.first?.type.name.lowercased() else {
             // Default color if details are not available
