@@ -17,9 +17,10 @@ struct PokemonDetails: Identifiable, Decodable {
     let types: [Type]
     let stats: [Stat]
     let sprites: Sprites
+    let cries: Cries
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, weight, abilities, moves, types, stats, sprites
+        case id, name, weight, abilities, moves, types, stats, sprites, cries
     }
 }
 
@@ -36,8 +37,29 @@ extension Ability: Hashable {
 }
 
 
+extension Cries: Equatable {
+    static func == (lhs: Cries, rhs: Cries) -> Bool {
+        return lhs.latest == rhs.latest && lhs.legacy == rhs.legacy
+    }
+}
 
+extension Cries: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(latest)
+        hasher.combine(legacy)
+    }
+}
 
+struct Cries: Codable {
+    let latest: String?
+    let legacy: String
+    
+    private enum CodingKeys: String, CodingKey {
+        case latest = "latest"
+        case legacy = "legacy"
+    }
+    
+}
 
 struct Sprites: Codable {
     let frontDefault: String
@@ -48,6 +70,7 @@ struct Sprites: Codable {
         case backDefault = "back_default"
     }
 }
+
 
 struct Ability: Codable {
     let ability: APIItem
@@ -70,6 +93,8 @@ struct Stat: Codable {
         case baseStat = "base_stat"
     }
 }
+
+
 
 extension Sprites: Equatable {
     static func == (lhs: Sprites, rhs: Sprites) -> Bool {

@@ -13,7 +13,7 @@ import Combine
 
 struct PokemonItemViewContainer: View {
     let pokemon: Pokemon
-    let dimensions: Double = 140
+    let dimensions: Double = 200
     @ObservedObject var viewModel: PokemonListViewModel
     
     var body: some View {
@@ -23,33 +23,52 @@ struct PokemonItemViewContainer: View {
                     if let spriteURL = URL(string: details.sprites.frontDefault) {
                         AsyncImage(url: spriteURL) { image in
                             image
-                                
-                                 // Fixed size for image
+                                .resizable()
+                                .interpolation(.high) // Smooth interpolation
+                                .scaledToFit()
+                                .frame(width: dimensions * 0.8) // Adjust size as needed
                         } placeholder: {
-                            ProgressView()
-                                .frame(width: dimensions, height: dimensions)
+                            // Placeholder image
+                            if let holderURL = URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png"),
+                               let holderImage = UIImage(contentsOfFile: holderURL.path) {
+                                Image(uiImage: holderImage)
+                                    .resizable()
+                                    .interpolation(.high) // Smooth interpolation
+                                    .scaledToFit()
+                                    .frame(width: dimensions * 0.8) // Adjust size as needed
+                            } else {
+                                Color.gray // Fallback color if image loading fails
+                            }
                         }
+
                     }
-                    
-                    Text(pokemon.name)
-                        .font(.caption)
-                        .multilineTextAlignment(.center)
-                        .frame(width: dimensions) // Fixed width for text
                 }
                 .padding(8)
                 .background(determineBackgroundColor())
                 .clipShape(Circle())
-                // Half of the width of VStack container
-                // Fixed size for VStack container
+                .frame(width: dimensions, height: dimensions)
+                
+                // Text outside the circle
+                Text(pokemon.name.capitalized) // Uppercase the first letter of the name
+                    .font(.title) // Increase the font size
+                    .multilineTextAlignment(.center)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .padding(5)
+                    .frame(width: dimensions * 0.8) // Adjust size as needed
+// Adjust size as needed
             } else {
                 ProgressView()
                     .onAppear {
                         viewModel.fetchPokemonDetails(for: pokemon)
                     }
-                    .clipShape(Circle())
+                    .frame(width: dimensions, height: dimensions)
             }
         }
     }
+
+
+
     private func determineBackgroundColor() -> Color {
         guard let details = viewModel.pokemonDetails[pokemon.name],
               let type = details.types.first?.type.name.lowercased() else {
