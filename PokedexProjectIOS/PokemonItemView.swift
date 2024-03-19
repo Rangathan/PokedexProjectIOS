@@ -37,7 +37,7 @@ import OggDecoder
 struct PokemonDetailView: View {
     let pokemonDetails: PokemonDetails?
     @State private var player: AVPlayer?
-
+    
     var body: some View {
         VStack {
             if let pokemonDetails = pokemonDetails {
@@ -57,16 +57,7 @@ struct PokemonDetailView: View {
                 }
                 .onAppear {
                     if let soundURL = URL(string: pokemonDetails.cries.legacy) {
-                        let decoder = OGGDecoder()
-                        decoder.decode(soundURL) { (savedWavUrl: URL?) in
-                            if let savedWavUrl = savedWavUrl {
-                                let playerItem = AVPlayerItem(url: savedWavUrl)
-                                player = AVPlayer(playerItem: playerItem)
-                                player?.play()
-                            } else {
-                                print(soundURL)
-                            }
-                        }
+                        downloadAndPlaySound(url: soundURL)
                     }
                 }
             } else {
@@ -75,11 +66,53 @@ struct PokemonDetailView: View {
         }
         .padding()
     }
+    
+    private func downloadAndPlaySound(url: URL) {
+        URLSession.shared.downloadTask(with: url) { (tempLocalUrl, response, error) in
+            if let tempLocalUrl = tempLocalUrl, error == nil {
+                let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                let savedWavUrl = documentsDirectory.appendingPathComponent("tempSound.ogg")
+                
+                var finalSavedWavUrl = savedWavUrl
+                
+                if FileManager.default.fileExists(atPath: savedWavUrl.path) {
+                    let uuid = UUID().uuidString
+                    let newFileName = "tempSound_\(uuid).ogg"
+                    finalSavedWavUrl = documentsDirectory.appendingPathComponent(newFileName)
+                }
+                
+                do {
+                    try FileManager.default.moveItem(at: tempLocalUrl, to: finalSavedWavUrl)
+                    let decoder = OGGDecoder()
+                    decoder.decode(finalSavedWavUrl) { (decodedUrl: URL?) in
+                        if let decodedUrl = decodedUrl {
+                            let playerItem = AVPlayerItem(url: decodedUrl)
+                            self.player = AVPlayer(playerItem: playerItem)
+                            self.player?.play()
+                            NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: playerItem, queue: .main) { (_) in
+                                do {
+                                    try FileManager.default.removeItem(at: finalSavedWavUrl)
+                                } catch {
+                                    print("Error deleting audio file: \(error)")
+                                }
+                            }
+                        } else {
+                            print("Error: Unable to decode the audio file.")
+                        }
+                    }
+                } catch {
+                    print("Error: \(error)")
+                }
+            } else {
+                print("Error: \(error?.localizedDescription ?? "Unknown error")")
+            }
+        }.resume()
+    }
 
-
+    
+    
     private func determineBackgroundColor(for pokemonDetails: PokemonDetails) -> Color {
         guard let type = pokemonDetails.types.first?.type.name.lowercased() else {
-            // Default color if details are not available
             return Color.gray
         }
         
@@ -162,7 +195,7 @@ struct PokemonHeader: View {
                     HStack {
                         Text("ID: \(id)")
                         Spacer()
-                        Text("Weight: \(weight) KG")
+                        Text("Weight: \(weight) lbs")
                     }
                     .padding(.horizontal)
                 }
