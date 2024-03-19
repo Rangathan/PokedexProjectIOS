@@ -11,7 +11,6 @@ struct ContentView: View {
     @StateObject private var viewModel = PokemonListViewModel()
     @State private var isShowingPokemonDetails = false
     
-    // Define the adaptive columns for the LazyVGrid
     let adaptiveColumns = [
         GridItem(.adaptive(minimum: 150), spacing: 10)
     ]

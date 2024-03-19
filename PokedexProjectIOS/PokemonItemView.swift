@@ -10,6 +10,7 @@ import Combine
 import AVKit
 import AVFoundation
 import OggDecoder
+import UIKit
 
 
 struct PokemonItemView: View {
@@ -46,14 +47,34 @@ struct PokemonDetailView: View {
                         .padding()
                         .background(determineBackgroundColor(for: pokemonDetails))
                         .cornerRadius(10)
+                    PokemonStatsSectionView(title: "Stats", items: pokemonDetails.stats.prefix(3).map { "\($0.stat.name.capitalized): \($0.baseStat)" })
+                        .frame(width: 360, height: 80)                     
+                        .background(Color.white)
+                        .cornerRadius(10)
+                        .shadow(radius: 5)
                     
-                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20)], spacing: 20) {
+                    LazyVGrid(columns: [GridItem(.fixed(220), spacing: 5), GridItem(.fixed(200), spacing: 5)]) {  
+                        
                         PokemonSectionView(title: "Abilities", items: pokemonDetails.abilities.prefix(5).map { $0.ability.name.capitalized })
-                        PokemonSectionView(title: "Moves", items: pokemonDetails.moves.prefix(5).map { $0.move.name.capitalized })
+                            .frame(width: 150, height: 150)
+                            .background(Color.white)
+                            .cornerRadius(10)
+                            .shadow(radius: 5)
                         PokemonSectionView(title: "Types", items: pokemonDetails.types.prefix(5).map { $0.type.name.capitalized })
-                        PokemonSectionView(title: "Stats", items: pokemonDetails.stats.prefix(3).map { "\($0.stat.name.capitalized): \($0.baseStat)" })
+                            .frame(width: 150, height: 150)
+                            .background(Color.white)
+                            .cornerRadius(10)
+                            .shadow(radius: 5)
+                            .padding(.horizontal, 5)
+                        
                     }
                     .padding()
+                    PokemonStatsSectionView(title: "Moves", items: pokemonDetails.moves.prefix(4).map { $0.move.name.capitalized })
+                        .frame(width: 360, height: 80)
+                        .background(Color.white)
+                        .cornerRadius(10)
+                        .shadow(radius: 5)
+                   
                 }
                 .onAppear {
                     if let soundURL = URL(string: pokemonDetails.cries.legacy) {
@@ -160,7 +181,33 @@ struct PokemonDetailView: View {
         }
     }
 }
-
+struct PokemonStatsSectionView: View {
+    let title: String
+    let items: [String]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.headline)
+                .padding(.horizontal, 12)
+                .padding(.top, 10)
+            
+            HStack(alignment: .center, spacing: 10) { // Provide alignment and spacing
+                ForEach(items, id: \.self) { item in
+                    Text(item)
+                        .font(.subheadline)
+                        .foregroundColor(.primary)
+                        .padding(.vertical, 4)
+                        .padding(.horizontal, 8)
+                        .background(Color.secondary.opacity(0.2))
+                        .cornerRadius(8)
+                }
+            }
+        }
+        .padding(12)
+        .padding(.horizontal, 12)
+    }
+}
 
 
 struct PokemonSectionView: View {
@@ -168,18 +215,30 @@ struct PokemonSectionView: View {
     let items: [String]
     
     var body: some View {
-        VStack(alignment: .leading) {
-            Text(title)
-                .font(.headline)
-            ForEach(items, id: \.self) { item in
-                Text(item)
+            VStack(alignment: .leading, spacing: 10) {
+                Text(title)
+                    .font(.headline)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 10)
+                Spacer()
+                
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(items, id: \.self) { item in
+                        Text(item)
+                            .font(.subheadline)
+                            .foregroundColor(.primary)
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .background(Color.secondary.opacity(0.2))
+                            .cornerRadius(8)
+                    }
+                }
             }
-        }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(10)
+        .padding(12)
+        .padding(.horizontal, 12)
     }
 }
+
 
 
 struct PokemonHeader: View {
@@ -198,11 +257,15 @@ struct PokemonHeader: View {
                         Text("Weight: \(weight) lbs")
                     }
                     .padding(.horizontal)
+                    
                 }
                 Text("\(name.capitalized)")
                     .font(.title)
             }
             .frame(maxWidth: .infinity)
+            .padding(.vertical, 3)
+            .padding(.horizontal, 5)
+           
             AsyncImage(url: URL(string: spriteURL)) { image in
                 image
                     .resizable()
@@ -210,69 +273,13 @@ struct PokemonHeader: View {
             } placeholder: {
                 ProgressView()
             }
-            .frame(width: 200, height: 200)
+            .frame(width: 175, height: 175)
         }
     }
 }
 
-// Other views remain the same
 
 
-struct PokemonAbilities: View {
-    let abilities: [Ability]
-    
-    var body: some View {
-        VStack(alignment: .leading) {
-            Text("Abilities:")
-                .font(.headline)
-            ForEach(abilities, id: \.self) { ability in
-                Text(ability.ability.name.capitalized)
-            }
-        }
-    }
-}
-
-struct PokemonMoves: View {
-    let moves: [Move]
-    
-    var body: some View {
-        VStack(alignment: .leading) {
-            Text("Moves:")
-                .font(.headline)
-            ForEach(moves, id: \.self) { move in
-                Text(move.move.name.capitalized)
-            }
-        }
-    }
-}
-
-struct PokemonTypes: View {
-    let types: [Type]
-    
-    var body: some View {
-        VStack(alignment: .leading) {
-            Text("Types:")
-                .font(.headline)
-            ForEach(types, id: \.self) { type in
-                Text(type.type.name.capitalized)
-            }
-        }
-    }
-}
-
-struct PokemonStats: View {
-    let stats: [Stat]
-    
-    var body: some View {
-        VStack(alignment: .leading) {
-            Text("Stats:")
-                .font(.headline)
-            ForEach(stats, id: \.self) { stat in
-                Text("\(stat.stat.name.capitalized): \(stat.baseStat)")
-            }
-        }
-    }
-}
 
 
 
