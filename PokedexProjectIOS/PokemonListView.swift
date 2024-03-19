@@ -16,6 +16,7 @@ struct PokemonItemViewContainer: View {
     let dimensions: Double = 200
     @ObservedObject var viewModel: PokemonListViewModel
     
+    
     var body: some View {
         VStack {
             if let details = viewModel.pokemonDetails[pokemon.name] {

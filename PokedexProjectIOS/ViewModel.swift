@@ -12,6 +12,8 @@ class PokemonListViewModel: ObservableObject {
     @Published var pokemonList: [Pokemon] = []
     @Published var isLoading = false
     @Published var selectedPokemon: Pokemon?
+    @Published var filteredPokemonList: [Pokemon] = [] // Updated line
+    @Published var searchText: String = "" // Add searchText property
 
     // Dictionary to store PokemonDetails with Pokemon name as key
     @Published var pokemonDetails: [String: PokemonDetails] = [:]
@@ -41,12 +43,25 @@ class PokemonListViewModel: ObservableObject {
                     self.isLoading = false
                 }
             }, receiveValue: { [weak self] (pokemonPage: PokemonPage) in
-                // Handle the received PokemonListResponse
                 guard let self = self else { return }
                 self.pokemonList = pokemonPage.results
+                self.filterPokemonList(with: self.searchText) // Update filtered list
             })
             .store(in: &cancellables)
     }
+
+    
+    func filterPokemonList(with searchText: String) {
+        self.searchText = searchText // Store the search text
+        
+        if searchText.isEmpty {
+            filteredPokemonList = pokemonList
+        } else {
+            filteredPokemonList = pokemonList.filter { $0.name.lowercased().contains(searchText.lowercased()) }
+        }
+    }
+
+
 
     func fetchPokemonDetails(for pokemon: Pokemon) {
         guard let url = URL(string: pokemon.url) else {

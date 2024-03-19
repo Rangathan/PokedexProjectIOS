@@ -33,59 +33,64 @@ struct PokemonItemView: View {
     }
 }
 
-import OggDecoder
+
 
 struct PokemonDetailView: View {
     let pokemonDetails: PokemonDetails?
     @State private var player: AVPlayer?
     
     var body: some View {
+        
         VStack {
-            if let pokemonDetails = pokemonDetails {
-                VStack(spacing: 20) {
-                    PokemonHeader(name: pokemonDetails.name, id: pokemonDetails.id, weight: pokemonDetails.weight, spriteURL: pokemonDetails.sprites.frontDefault)
+            ZStack {
+                Color(hex: "b0c6d7") // Background color
+                    .ignoresSafeArea()
+                
+                if let pokemonDetails = pokemonDetails {
+                    VStack(spacing: 20) {
+                        PokemonHeader(name: pokemonDetails.name, id: pokemonDetails.id, weight: pokemonDetails.weight, spriteURL: pokemonDetails.sprites.frontDefault)
+                            .padding()
+                            .background(determineBackgroundColor(for: pokemonDetails))
+                            .cornerRadius(10)
+                        PokemonStatsSectionView(title: "Stats", items: pokemonDetails.stats.prefix(3).map { "\($0.stat.name.capitalized): \($0.baseStat)" })
+                            .frame(width: 360, height: 80)
+                            .background(determineBackgroundColor(for: pokemonDetails))
+                            .cornerRadius(10)
+                            .shadow(radius: 5)
+                        
+                        LazyVGrid(columns: [GridItem(.fixed(220), spacing: 5), GridItem(.fixed(200), spacing: 5)]) {
+                            
+                            PokemonSectionView(title: "Abilities", items: pokemonDetails.abilities.prefix(3).map { $0.ability.name.capitalized })
+                                .frame(width: 150, height: 150)
+                                .background(determineBackgroundColor(for: pokemonDetails))
+                                .cornerRadius(10)
+                                .shadow(radius: 5)
+                            PokemonSectionView(title: "Types", items: pokemonDetails.types.prefix(3).map { $0.type.name.capitalized })
+                                .frame(width: 150, height: 150)
+                                .background(determineBackgroundColor(for: pokemonDetails))
+                                .cornerRadius(10)
+                                .shadow(radius: 5)
+                                .padding(.horizontal, 5)
+                            
+                        }
                         .padding()
-                        .background(determineBackgroundColor(for: pokemonDetails))
-                        .cornerRadius(10)
-                    PokemonStatsSectionView(title: "Stats", items: pokemonDetails.stats.prefix(3).map { "\($0.stat.name.capitalized): \($0.baseStat)" })
-                        .frame(width: 360, height: 80)                     
-                        .background(Color.white)
-                        .cornerRadius(10)
-                        .shadow(radius: 5)
-                    
-                    LazyVGrid(columns: [GridItem(.fixed(220), spacing: 5), GridItem(.fixed(200), spacing: 5)]) {  
-                        
-                        PokemonSectionView(title: "Abilities", items: pokemonDetails.abilities.prefix(5).map { $0.ability.name.capitalized })
-                            .frame(width: 150, height: 150)
-                            .background(Color.white)
-                            .cornerRadius(10)
+                        PokemonStatsSectionView(title: "Moves", items: pokemonDetails.moves.prefix(4).map { $0.move.name.capitalized })
+                            .frame(width: 360, height: 80)
+                            .background(determineBackgroundColor(for: pokemonDetails))                        .cornerRadius(10)
                             .shadow(radius: 5)
-                        PokemonSectionView(title: "Types", items: pokemonDetails.types.prefix(5).map { $0.type.name.capitalized })
-                            .frame(width: 150, height: 150)
-                            .background(Color.white)
-                            .cornerRadius(10)
-                            .shadow(radius: 5)
-                            .padding(.horizontal, 5)
                         
                     }
-                    .padding()
-                    PokemonStatsSectionView(title: "Moves", items: pokemonDetails.moves.prefix(4).map { $0.move.name.capitalized })
-                        .frame(width: 360, height: 80)
-                        .background(Color.white)
-                        .cornerRadius(10)
-                        .shadow(radius: 5)
-                   
-                }
-                .onAppear {
-                    if let soundURL = URL(string: pokemonDetails.cries.legacy) {
-                        downloadAndPlaySound(url: soundURL)
+                    .onAppear {
+                        if let soundURL = URL(string: pokemonDetails.cries.legacy) {
+                            downloadAndPlaySound(url: soundURL)
+                        }
                     }
+                } else {
+                    Text("Pokemon details not available")
                 }
-            } else {
-                Text("Pokemon details not available")
             }
+            .padding()
         }
-        .padding()
     }
     
     private func downloadAndPlaySound(url: URL) {
